@@ -3,7 +3,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const nodemailer = require("nodemailer");
-
+const port =  process.env.PORT
 dotenv.config();
 
 const app = express();
@@ -97,6 +97,6 @@ app.post("/store-ticket", async (req, res) => {
 });
 
 // Start the server
-app.listen(5000, () => {
+app.listen( port,  () => {
     console.log("Server running on port 5000");
 });
