@@ -31,7 +31,6 @@ const ticketSchema = new mongoose.Schema({
   quantity: { type: Number, default: 1 },
   amount: { type: Number, required: true },
   isPaid: { type: Boolean, default: false },
-  isUsed: { type: Boolean, default: false }, // Add this field
   paymentReference: { type: String },
   purchaseDate: { type: Date, default: Date.now },
 })
@@ -105,107 +104,6 @@ app.get("/tickets", async (req, res) => {
   }
 });
 
-// Add endpoint to update ticket usage status
-app.patch("/tickets/:ticketId", async (req, res) => {
-  const { ticketId } = req.params;
-  const updateData = req.body;
-  
-  // Only allow specific fields to be updated for security
-  const allowedUpdates = { 
-    isUsed: updateData.isUsed,
-    isPaid: updateData.isPaid
-  };
-  
-  // Remove undefined fields
-  Object.keys(allowedUpdates).forEach(key => 
-    allowedUpdates[key] === undefined && delete allowedUpdates[key]
-  );
-  
-  try {
-    const ticket = await Ticket.findOne({ ticketId });
-    
-    if (!ticket) {
-      return res.status(404).json({ message: "Ticket not found" });
-    }
-    
-    // Update the ticket
-    const updatedTicket = await Ticket.findOneAndUpdate(
-      { ticketId }, 
-      { $set: allowedUpdates },
-      { new: true } // Return the updated document
-    );
-    
-    res.status(200).json(updatedTicket);
-  } catch (error) {
-    console.error("Error updating ticket:", error);
-    res.status(500).json({ message: "Failed to update ticket" });
-  }
-});
-
-// Add endpoint to get single ticket
-app.get("/tickets/:ticketId", async (req, res) => {
-  const { ticketId } = req.params;
-  
-  try {
-    const ticket = await Ticket.findOne({ ticketId });
-    
-    if (!ticket) {
-      return res.status(404).json({ message: "Ticket not found" });
-    }
-    
-    res.status(200).json(ticket);
-  } catch (error) {
-    console.error("Error fetching ticket:", error);
-    res.status(500).json({ message: "Failed to fetch ticket" });
-  }
-});
-
-// Add endpoint for ticket validation
-app.get("/validate-ticket/:ticketId", async (req, res) => {
-  const { ticketId } = req.params;
-  
-  try {
-    const ticket = await Ticket.findOne({ ticketId });
-    
-    if (!ticket) {
-      return res.status(404).json({ 
-        valid: false, 
-        message: "Ticket not found" 
-      });
-    }
-    
-    // Check if ticket is paid and not used
-    const isValid = ticket.isPaid && !ticket.isUsed;
-    
-    res.status(200).json({
-      valid: isValid,
-      ticket: {
-        ticketId: ticket.ticketId,
-        email: ticket.email,
-        category: ticket.category,
-        isPaid: ticket.isPaid,
-        isUsed: ticket.isUsed,
-        purchaseDate: ticket.purchaseDate
-      },
-      message: isValid 
-        ? "Valid ticket" 
-        : ticket.isUsed 
-          ? "Ticket has already been used" 
-          : "Ticket payment is pending"
-    });
-  } catch (error) {
-    console.error("Error validating ticket:", error);
-    res.status(500).json({ 
-      valid: false,
-      message: "Failed to validate ticket" 
-    });
-  }
-});
-
-// Start the server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`)
-})
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`)
