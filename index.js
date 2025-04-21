@@ -94,6 +94,15 @@ app.post("/store-ticket", async (req, res) => {
     res.status(500).json({ message: "Failed to store ticket." })
   }
 })
+app.get("/tickets", async (req, res) => {
+  try {
+    const tickets = await Ticket.find({}).sort({ purchaseDate: -1 });
+    res.status(200).json(tickets);
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+    res.status(500).json({ message: "Failed to fetch tickets." });
+  }
+});
 
 // Start the server
 app.listen(port, () => {
